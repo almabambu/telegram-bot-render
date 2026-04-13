@@ -9,8 +9,16 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
 
     ydl_opts = {
-        'format': 'best[height<=720]',
-        'outtmpl': 'video.%(ext)s'
+        'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
+        'outtmpl': 'video.%(ext)s',
+        'merge_output_format': 'mp4',
+        'quiet': True,
+        'noplaylist': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        },
+        'nocheckcertificate': True,
+        'ignoreerrors': True,
     }
 
     try:
@@ -18,10 +26,13 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ydl.download([url])
 
         for file in os.listdir():
-            if file.startswith("video"):
-                await update.message.reply_video(video=open(file, 'rb'))
+            if file.startswith("video") and file.endswith(".mp4"):
+                with open(file, 'rb') as f:
+                    await update.message.reply_video(video=f)
                 os.remove(file)
-                break
+                return
+
+        await update.message.reply_text("❌ No se pudo descargar el video")
 
     except Exception as e:
         await update.message.reply_text(f"Error: {e}")
